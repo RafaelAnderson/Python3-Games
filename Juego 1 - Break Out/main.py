@@ -4,7 +4,10 @@ import time
 
 ANCHO = 640
 ALTO = 480
-color_negro = (0, 0, 0) # Color RGB
+color_negro = (0, 0, 0) # Color negro RGB
+color_blanco = (255, 255, 255) # Color blanco RGB
+color_rojo = (255, 0, 0) # Color rojo RGB
+esperando_saque = True
 
 # Inicializar fuentes en el videojuego
 pygame.init()
@@ -74,7 +77,7 @@ class Muro(pygame.sprite.Group):
 
 def juego_terminado():
     fuente = pygame.font.SysFont('Arial', 72)
-    texto = fuente.render('Juego terminado :(', True, (255, 255, 255))
+    texto = fuente.render('Juego terminado :(', True, (color_blanco))
     texto_rect = texto.get_rect()
     texto_rect.center = [int(ANCHO / 2), int(ALTO / 2)]
     pantalla.blit(texto, texto_rect)
@@ -82,6 +85,21 @@ def juego_terminado():
     # Pausando por 3 segundos
     time.sleep(3)
     sys.exit()
+
+def mostrar_puntuacion():
+    fuente = pygame.font.SysFont('Consolas', 20)
+    texto = fuente.render(str(puntuacion).zfill(5), True, (color_blanco))
+    texto_rect = texto.get_rect()
+    texto_rect.topleft = [0,0]
+    pantalla.blit(texto, texto_rect)
+
+def mostrar_vidas():
+    fuente = pygame.font.SysFont('Consolas', 20)
+    texto = fuente.render("Vidas: " + str(vidas), True, (color_rojo))
+    texto_rect = texto.get_rect()
+    texto_rect.topright = [ANCHO,0]
+    pantalla.blit(texto, texto_rect)
+
 ##########################################################
 
 # Inicializando pantalla
@@ -94,7 +112,9 @@ reloj = pygame.time.Clock()
 pelota = Pelota()
 jugador = Jugador()
 #Multiplo de 16
-muro = Muro(32)
+muro = Muro(48)
+puntuacion = 0
+vidas = 3
 # Repetición de evento de tecla presionada
 pygame.key.set_repeat(30)
 
@@ -108,9 +128,18 @@ while True:
             sys.exit()
         elif evento.type == pygame.KEYDOWN:
             jugador.update(evento)
+            if esperando_saque == True and evento.key == pygame.K_SPACE:
+                esperando_saque = False
+                if pelota.rect.centerx < int(ANCHO / 2):
+                    pelota.speed = [3, -3]
+                else:
+                    pelota.speed = [-3, -3]
 
-    #Actualizar posicion de la pelota
-    pelota.update()
+    if esperando_saque == False:
+        #Actualizar posicion de la pelota
+        pelota.update()
+    else:
+        pelota.rect.midbottom = jugador.rect.midtop
     #Colision entre pelota y jugador
     if pygame.sprite.collide_rect(pelota, jugador):
         pelota.speed[1] = -pelota.speed[1]
@@ -124,11 +153,17 @@ while True:
         else:
             pelota.speed[1] = -pelota.speed[1]
         muro.remove(ladrillo)
+        puntuacion += 20
     # Revisar si la pelota sale de la pantalla
     if pelota.rect.top > ALTO:
-        juego_terminado()
+        vidas -= 1
+        esperando_saque = True
+
     # Rellenar fondo
     pantalla.fill(color_negro)
+    #Mostrar puntuación
+    mostrar_puntuacion()
+    mostrar_vidas()
     # Dibujar pelota (blit dibuja una superficie sobre otra)
     pantalla.blit(pelota.image, pelota.rect)
     pantalla.blit(jugador.image, jugador.rect)
@@ -136,3 +171,6 @@ while True:
     muro.draw(pantalla)
     # Actualiza elementos de la pantalla
     pygame.display.flip()
+
+    if vidas <= 0:
+        juego_terminado()
