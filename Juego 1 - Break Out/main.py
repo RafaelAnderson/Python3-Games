@@ -43,6 +43,28 @@ class Jugador(pygame.sprite.Sprite):
         else: self.speed = [0, 0]
         self.rect.move_ip(self.speed)
 
+class Ladrillo(pygame.sprite.Sprite):
+    def __init__(self, posicion):
+        pygame.sprite.Sprite.__init__(self)
+        #Cargar imagen
+        self.image = pygame.image.load("images/ladrillo.png")
+        # Obtener rectángulo
+        self.rect = self.image.get_rect()
+        #Posicion inicial, provista externamente
+        self.rect.topleft = posicion
+
+class Muro(pygame.sprite.Group):
+    def __init__(self):
+        pygame.sprite.Group.__init__(self)
+
+        ladrillo1 = Ladrillo((0, 0))
+        ladrillo2 = Ladrillo((100, 100))
+
+        self.add(ladrillo1)
+        self.add(ladrillo2)
+
+##########################################################
+
 # Inicializando pantalla
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 #Configurando título
@@ -52,6 +74,7 @@ reloj = pygame.time.Clock()
 # Objeto pelota
 pelota = Pelota()
 jugador = Jugador()
+muro = Muro()
 # Repetición de evento de tecla presionada
 pygame.key.set_repeat(30)
 
@@ -73,5 +96,7 @@ while True:
     # Dibujar pelota (blit dibuja una superficie sobre otra)
     pantalla.blit(pelota.image, pelota.rect)
     pantalla.blit(jugador.image, jugador.rect)
+    #Dibujar los ladrillos
+    muro.draw(pantalla)
     # Actualiza elementos de la pantalla
     pygame.display.flip()
