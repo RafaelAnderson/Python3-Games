@@ -54,14 +54,15 @@ class Ladrillo(pygame.sprite.Sprite):
         self.rect.topleft = posicion
 
 class Muro(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self, cantidadLadrillos):
         pygame.sprite.Group.__init__(self)
+        pos_x = 0
+        pos_y = 20
 
-        ladrillo1 = Ladrillo((0, 0))
-        ladrillo2 = Ladrillo((100, 100))
-
-        self.add(ladrillo1)
-        self.add(ladrillo2)
+        for i in range (cantidadLadrillos):
+            ladrillo = Ladrillo((pos_x, pos_y))
+            self.add(ladrillo)
+            pos_x += ladrillo.rect.width
 
 ##########################################################
 
@@ -74,7 +75,7 @@ reloj = pygame.time.Clock()
 # Objeto pelota
 pelota = Pelota()
 jugador = Jugador()
-muro = Muro()
+muro = Muro(10)
 # Repetición de evento de tecla presionada
 pygame.key.set_repeat(30)
 
@@ -91,6 +92,20 @@ while True:
 
     #Actualizar posicion de la pelota
     pelota.update()
+    #Colision entre pelota y jugador
+    if pygame.sprite.collide_rect(pelota, jugador):
+        pelota.speed[1] = -pelota.speed[1]
+    #Colision de la pelota con el muro
+    lista = pygame.sprite.spritecollide(pelota, muro, False)
+    if lista:
+        ladrillo = lista[0]
+        cx = pelota.rect.centerx
+        if cx < ladrillo.rect.left or cx > ladrillo.rect.right:
+            pelota.speed[0] = -pelota.speed[0]
+        else:
+            pelota.speed[1] = -pelota.speed[1]
+        muro.remove(ladrillo)
+
     #Rellenar fondo
     pantalla.fill(color_negro)
     # Dibujar pelota (blit dibuja una superficie sobre otra)
