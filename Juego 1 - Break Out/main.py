@@ -1,9 +1,13 @@
 import pygame
 import sys
+import time
 
 ANCHO = 640
 ALTO = 480
 color_negro = (0, 0, 0) # Color RGB
+
+# Inicializar fuentes en el videojuego
+pygame.init()
 
 class Pelota(pygame.sprite.Sprite):
     def __init__(self):
@@ -13,13 +17,13 @@ class Pelota(pygame.sprite.Sprite):
         # Obtener rectángulo
         self.rect = self.image.get_rect()
         # Posicion inicial
-        self.rect.centerx = ANCHO / 2
-        self.rect.centery = ALTO / 2
+        self.rect.centerx = int(ANCHO / 2 - 40)
+        self.rect.centery = int(ALTO / 2)
         #Velocidad
         self.speed = [3, 3]
     def update(self):
         # Evitar que salga por abajo y arriba
-        if self.rect.bottom >= ALTO or self.rect.top <= 0:
+        if self.rect.top <= 0:
             self.speed[1] = -self.speed[1]
         # Evitar que salga por la derecha e izquierda
         elif self.rect.right >= ANCHO or self.rect.left <= 0:
@@ -32,8 +36,8 @@ class Jugador(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("images/barra.png")
         self.rect = self.image.get_rect()
-        self.rect.midbottom = (ANCHO / 2, ALTO - 20)
-        self.speed = [3, 0]
+        self.rect.midbottom = (int(ANCHO / 2), int(ALTO - 40))
+        self.speed = [5, 0]
     def update(self, evento):
         # Flecha izquierda
         if evento.key == pygame.K_LEFT and self.rect.left > 0:
@@ -63,7 +67,21 @@ class Muro(pygame.sprite.Group):
             ladrillo = Ladrillo((pos_x, pos_y))
             self.add(ladrillo)
             pos_x += ladrillo.rect.width
+            if pos_x >= ANCHO:
+                pos_x = 0
+                pos_y += ladrillo.rect.height
 
+
+def juego_terminado():
+    fuente = pygame.font.SysFont('Arial', 72)
+    texto = fuente.render('Juego terminado :(', True, (255, 255, 255))
+    texto_rect = texto.get_rect()
+    texto_rect.center = [int(ANCHO / 2), int(ALTO / 2)]
+    pantalla.blit(texto, texto_rect)
+    pygame.display.flip()
+    # Pausando por 3 segundos
+    time.sleep(3)
+    sys.exit()
 ##########################################################
 
 # Inicializando pantalla
@@ -75,7 +93,8 @@ reloj = pygame.time.Clock()
 # Objeto pelota
 pelota = Pelota()
 jugador = Jugador()
-muro = Muro(10)
+#Multiplo de 16
+muro = Muro(32)
 # Repetición de evento de tecla presionada
 pygame.key.set_repeat(30)
 
@@ -105,13 +124,15 @@ while True:
         else:
             pelota.speed[1] = -pelota.speed[1]
         muro.remove(ladrillo)
-
-    #Rellenar fondo
+    # Revisar si la pelota sale de la pantalla
+    if pelota.rect.top > ALTO:
+        juego_terminado()
+    # Rellenar fondo
     pantalla.fill(color_negro)
     # Dibujar pelota (blit dibuja una superficie sobre otra)
     pantalla.blit(pelota.image, pelota.rect)
     pantalla.blit(jugador.image, jugador.rect)
-    #Dibujar los ladrillos
+    # Dibujar los ladrillos
     muro.draw(pantalla)
     # Actualiza elementos de la pantalla
     pygame.display.flip()
